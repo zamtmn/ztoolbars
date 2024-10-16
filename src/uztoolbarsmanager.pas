@@ -725,7 +725,7 @@ end;
 procedure TToolBarsManager.LoadPalettes(filename:string);
 var
   tempPalettesConfig:TXMLConfig;
-  tempPalettesContentNode,TBContentNode,TBSubNode,findedNode:TDomNode;
+  tempPalettesContentNode,TBContentNode{,TBSubNode,findedNode}:TDomNode;
 begin
   if not assigned(PalettesConfig) then begin
     PalettesConfig:=TXMLConfig.Create(nil);

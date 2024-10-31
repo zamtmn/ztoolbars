@@ -88,13 +88,13 @@ end;
 function TGMenusManager.FindsubNodeWithAttrName(node: TDOMNode;attrname:DOMString): TDOMNode;
 var
   {TBSubNode,}TBSubNode2:TDomNode;
-  s:DOMString;
+  //s:DOMString;
 begin
   if attrname='' then exit(nil);
   TBSubNode2:=node.FirstChild;
   while assigned(TBSubNode2)do
   begin
-    s:=TBSubNode2.NodeName;
+    //s:=TBSubNode2.NodeName;
     if getAttrValue(TBSubNode2,'Name','')=attrname then
       exit(TBSubNode2);
     TBSubNode2:=TBSubNode2.NextSibling;
@@ -105,14 +105,14 @@ end;
 procedure TGMenusManager.ConcatNodes(Child,NewChild: TDOMNode);
 var
   TBSubNode,TBSubNode2:TDomNode;
-  s:DOMString;
+  //s:DOMString;
 begin
   TBSubNode:=FindsubNodeWithAttrName(Child,getAttrValue(NewChild,'Name',''));
   if (assigned(TBSubNode))and(isMenu(TBSubNode))and(isMenu(NewChild)) then begin
     TBSubNode2:=NewChild.FirstChild;
     while assigned(TBSubNode2)do
     begin
-      s:=TBSubNode2.NodeName;
+      //s:=TBSubNode2.NodeName;
       ConcatNodes(TBSubNode,TBSubNode2);
       TBSubNode2:=TBSubNode2.NextSibling;
     end;
@@ -361,11 +361,11 @@ begin
       while assigned(TBSubNode)do
       begin
         if TBSubNode.nodeName='CreateMenu' then begin
-          TMenuDefaults.TryRunMenuCreateFunc(TMenuType.TMT_MainMenu,fmainform,TBSubNode.NodeName,TBSubNode,factionlist,nil,mpf);
+          TMenuDefaults.TryRunMenuCreateFunc(TMenuType.TMT_MainMenu,fmainform,TBSubNode.NodeName,TBSubNode,factionlist,nil{,mpf});
           //exit;
         end;
         if TBSubNode.nodeName='SetMainMenu' then begin
-          TMenuDefaults.TryRunMenuCreateFunc(TMenuType.TMT_MainMenu,fmainform,TBSubNode.NodeName,TBSubNode,factionlist,nil,mpf);
+          TMenuDefaults.TryRunMenuCreateFunc(TMenuType.TMT_MainMenu,fmainform,TBSubNode.NodeName,TBSubNode,factionlist,nil{,mpf});
           //exit;
         end;
         TBSubNode:=TBSubNode.NextSibling;

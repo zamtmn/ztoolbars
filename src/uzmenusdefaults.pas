@@ -42,7 +42,7 @@ type
     class procedure DefaultSetMenu(MT:TMenuType;fmf:TForm;aName: string;aNode: TDomNode;actlist:TActionList;RootMenuItem:TMenuItem;MPF:TMacroProcessFunc);
     class procedure DefaultMainMenuItemReader(MT:TMenuType;fmf:TForm;aName: string;aNode: TDomNode;actlist:TActionList;RootMenuItem:TMenuItem;MPF:TMacroProcessFunc);
 
-    class procedure TryRunMenuCreateFunc(MT:TMenuType;fmf:TForm;aName: string;aNode: TDomNode;actlist:TActionList;RootMenuItem:TMenuItem;MPF:TMacroProcessFunc);
+    class procedure TryRunMenuCreateFunc(MT:TMenuType;fmf:TForm;aName: string;aNode: TDomNode;actlist:TActionList;RootMenuItem:TMenuItem;MPF:TMacroProcessFunc=nil);
     class function RegisterMenuCreateFunc(aNodeName:string;MenuCreateFunc:TMenuCreateFunc):boolean;
     class procedure UnRegisterMenuCreateFunc(aNodeName:string);
   end;

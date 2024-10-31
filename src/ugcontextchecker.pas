@@ -7,8 +7,8 @@ interface
 uses
   LCLType,ImgList,
   Classes, SysUtils, ComCtrls, Controls, Graphics, Menus, Forms,ActnList,
-  LazConfigStorage,Laz2_XMLCfg,Laz2_DOM,
-  Generics.Collections, Generics.Defaults, gvector, gtree;
+  {LazConfigStorage,Laz2_XMLCfg,}Laz2_DOM,
+  Generics.Collections, Generics.Defaults{, gvector, gtree};
 
 type
   generic TGCContextIdManipulator<TGContextIdType,TGContextStateType>=class

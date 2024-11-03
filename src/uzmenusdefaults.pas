@@ -144,7 +144,7 @@ begin
     begin
       MenuItem:=tmenuitem(application.FindComponent(MenuNameModifier+uppercase(TBSubNode.NodeName)));
       if MenuItem=nil then begin
-        MenuItem:=MenusManager.GetSubMenu(MT,TBSubNode.NodeName,nil);
+        MenuItem:=tmenuitem(MenusManager.GetSubMenu(MT,TBSubNode.NodeName,nil));
         //MenuItem:=tmenuitem(application.FindComponent(MenuNameModifier+uppercase(TBSubNode.NodeName)));
       end;
       if MenuItem<>nil then

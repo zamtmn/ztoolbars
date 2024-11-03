@@ -25,7 +25,7 @@ type
   private
     factionlist:TActionList;
     fmainform:TForm;
-    function GetMenu_tmp(MT:TMenuType;aName: string;ctx:T;ForceReCreate:boolean=false;MMProcessor:TMenusMacros=nil):TMainMenu;
+    function GetMenu_tmp(MT:TMenuType;aName: string;ctx:T;ForceReCreate:boolean=false;MMProcessor:TMenusMacros=nil):TMenu;
 
   public
     constructor Create;
@@ -47,7 +47,7 @@ type
 
     function GetMainMenu(aName: string;ctx:T;MMProcessor:TMenusMacros=nil):TMainMenu;
     function GetPopupMenu(aName: string;ctx:T;MMProcessor:TMenusMacros=nil):TPopupMenu;
-    function GetSubMenu(MT:TMenuType;aName:string;ctx:T;MMProcessor:TMenusMacros=nil):TMenuItem;
+    function GetSubMenu(MT:TMenuType;aName:string;ctx:T;MMProcessor:TMenusMacros=nil):TMenu;
   end;
   TGeneralMenuManager=specialize TGMenusManager<TObject>;
 
@@ -280,17 +280,17 @@ begin
 end;
 function TGMenusManager.GetMainMenu(aName: string;ctx:T;MMProcessor:TMenusMacros=nil):TMainMenu;
 begin
-  result:=GetMenu_tmp(TMenuType.TMT_MainMenu,aName,ctx,false,MMProcessor);
+  result:=TMainMenu(GetMenu_tmp(TMenuType.TMT_MainMenu,aName,ctx,false,MMProcessor));
 end;
 function TGMenusManager.GetPopupMenu(aName: string;ctx:T;MMProcessor:TMenusMacros=nil):TPopupMenu;
 begin
   result:=TPopupMenu(GetMenu_tmp(TMenuType.TMT_PopupMenu,aName,ctx,true,MMProcessor));
 end;
-function TGMenusManager.GetSubMenu(MT:TMenuType;aName: string;ctx:T;MMProcessor:TMenusMacros=nil):TMenuItem;
+function TGMenusManager.GetSubMenu(MT:TMenuType;aName: string;ctx:T;MMProcessor:TMenusMacros=nil):TMenu;
 begin
-  result:=TMenuItem(GetMenu_tmp(MT,aName,ctx,true,MMProcessor));
+  result:=GetMenu_tmp(MT,aName,ctx,true,MMProcessor);
 end;
-function TGMenusManager.GetMenu_tmp(MT:TMenuType;aName: string;ctx:T;ForceReCreate:boolean=false;MMProcessor:TMenusMacros=nil):TMainMenu;
+function TGMenusManager.GetMenu_tmp(MT:TMenuType;aName: string;ctx:T;ForceReCreate:boolean=false;MMProcessor:TMenusMacros=nil):TMenu;
 var
   TBNode,TBSubNode:TDomNode;
   menuname:string;

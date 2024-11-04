@@ -85,7 +85,7 @@ type
     procedure RegisterActionCreateFunc(aNodeName:string;ActionCreateFunc:TActionCreateFunc);
     function CreateToolbar(aName:string):TToolBar;
     function CreateToolPalette(aControlName: string;DoDisableAlign:boolean=false):TPaletteControlBaseType;
-    function AddContentToToolbar(tb:TToolBar;aName:string):TToolBar;
+    procedure AddContentToToolbar(tb:TToolBar;aName:string);
     function DoTBCreateFunc(aName,aType:string):TToolBar;
     function DoToolPaletteCreateFunc(aControlName,aInternalName:string;TBNode:TDomNode;var PaletteControl:TPaletteControlBaseType;DoDisableAlign:boolean):TPaletteControlBaseType;
     procedure DoTBItemCreateFunc(fmf:TForm;actlist:TActionList;aNodeName:string; aNode: TDomNode; TB:TToolBar);
@@ -871,7 +871,7 @@ begin
   end;
 end;
 
-function TToolBarsManager.AddContentToToolbar(tb:TToolBar;aName:string):TToolBar;
+procedure TToolBarsManager.AddContentToToolbar(tb:TToolBar;aName:string);
 var
   TBNode{,TBSubNode}:TDomNode;
   TBType:string;

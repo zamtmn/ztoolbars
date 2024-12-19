@@ -102,7 +102,10 @@ begin
       if assigned(TBSubNode) then
         menuname:=uppercase(getAttrValue(TBSubNode,'Name',''));
     end;
-  result:=TBSubNode;
+  if menuname=aName then
+    result:=TBSubNode
+  else
+    result:=nil;
 end;
 
 class procedure TMenuDefaults.DefaultInsertMenuContent(MT:TMenuType;fmf:TForm;aName: string;aNode: TDomNode;actlist:TActionList;RootMenuItem:TMenuItem;MPF:TMacroProcessFunc);
@@ -122,6 +125,8 @@ var
 begin
   MenuName:=getAttrValue(aNode,'Name','');
   MenuNode:=FindMenuContent(MenuName);
+  if MenuNode=nil then
+    raise Exception.CreateFmt('DefaultInsertMenu: menu "%s" not found',[MenuName]);
   TMenuDefaults.TryRunMenuCreateFunc(MT,fmf,'SubMenu',MenuNode,actlist,RootMenuItem,MPF);
 end;
 

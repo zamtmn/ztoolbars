@@ -202,7 +202,7 @@ var
   conditions,condition:string;
   passed:boolean;
 begin
-  conditions:=getAttrValue(aNode,'Сonditions','');
+  conditions:=getAttrValue(aNode,'Conditions','');
   passed:=false;
   repeat
     GetPart(condition,conditions,',');
@@ -239,7 +239,7 @@ var
   conditions,condition:string;
   passed:boolean;
 begin
-  conditions:=getAttrValue(aNode,'Сonditions','');
+  conditions:=getAttrValue(aNode,'Conditions','');
   passed:=true;
   repeat
     GetPart(condition,conditions,',');

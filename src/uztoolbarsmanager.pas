@@ -10,6 +10,9 @@ uses
   LazConfigStorage,Laz2_XMLCfg,Laz2_DOM,
   Generics.Collections, Generics.Defaults, gvector;
 
+const
+  CToolBarsContent='ToolBarsContent';
+
 type
   TMenuType=(TMT_MainMenu,TMT_PopupMenu);
   TPopUpMenyProxyAction=class(TAction)
@@ -28,12 +31,15 @@ type
 
   TIterateToolbarsContentProc=procedure (_tb:TToolBar;_control:tcontrol);
 
+
   TPaletteControlBaseType=TWinControl;
   TPaletteCreateFunc=function (aName,aCaption,aType: string;TBNode:TDomNode;var PaletteControl:TPaletteControlBaseType;DoDisableAlign:boolean):TPaletteControlBaseType of object;
   TPaletteItemCreateFunc=procedure (aNode: TDomNode;rootnode:TPersistent;palette:TPaletteControlBaseType;treeprefix:string) of object;
-  TTBCreateFunc=function (aName,aType: string):TToolBar of object;
+  TTBCreateFunc=function (fmf:TForm;aName,aType: string):TToolBar of object;
   TTBItemCreateFunc=procedure (fmf:TForm;actlist:TActionList;aNode: TDomNode; TB:TToolBar) of object;
   TTBRegisterInAPPFunc=procedure (fmf:TForm;actlist:TActionList;aTBNode: TDomNode;aName,aType: string;Data:Pointer) of object;
+
+  TTBCheckFunc=function(fmf:TForm;actlist:TActionList;aTBNode:TDomNode;aName,aType:string):boolean;
 
   TPaletteCreateFuncRegister=specialize TDictionary <string,TPaletteCreateFunc>;
   TPaletteItemCreateFuncRegister=specialize TDictionary <string,TPaletteItemCreateFunc>;
@@ -69,7 +75,7 @@ type
     procedure ShowFloatToolbar(TBName:String;r:trect);
     procedure IterateToolBarsContent(ip:TIterateToolbarsContentProc);
     function FindToolBar(TBName:String;out tb:TToolBar):boolean;
-    procedure LoadToolBarsContent(filename:string);
+    procedure LoadToolBarsContent(AFileName:string;ACheckFunc:TTBCheckFunc);
     procedure LoadPalettes(filename:string);
     procedure LoadActions(filename:string);
     function FindBarsContent(toolbarname:string):TDomNode;
@@ -439,7 +445,7 @@ begin
   result:=nil;
   if assigned(TBCreateFuncRegister) then
     if TBCreateFuncRegister.TryGetValue(uppercase(aType),tbcf)then
-      result:=tbcf(aName,aType);
+      result:=tbcf(fmainform,aName,aType);
 end;
 
 procedure TToolBarsManager.RegisterTBItemCreateFunc(aNodeName:string;TBItemCreateFunc:TTBItemCreateFunc);
@@ -635,43 +641,62 @@ begin
   if not assigned(TBConfig) then
     exit(nil);
   result:=nil;
-  result:=TBConfig.FindNode('ToolBarsContent/'+toolbarname,false);
+  result:=TBConfig.FindNode(CToolBarsContent+'/'+toolbarname,false);
 end;
 function TToolBarsManager.FindPalettesContent(PaletteName:string):TDomNode;
 begin
   if not assigned(PalettesConfig) then
     exit(nil);
   result:=nil;
-  result:=PalettesConfig.FindNode('PalettesContent/'+PaletteName,false);
+  result:=PalettesConfig.FindNode('PalettesContent'+'/'+PaletteName,false);
 end;
-procedure TToolBarsManager.LoadToolBarsContent(filename:string);
+//TTBCheckFunc=procedure(fmf:TForm;actlist:TActionList;aTBNode:TDomNode;aName,aType:string;Data:Pointer);
+procedure TToolBarsManager.LoadToolBarsContent(AFileName:string;ACheckFunc:TTBCheckFunc);
 var
   tempTBConfig:TXMLConfig;
   tempTBContentNode,TBContentNode,TBSubNode:TDomNode;
+  TBName,TBType:string;
 begin
-  if not assigned(TBConfig) then begin
+  //создаем TBConfig если его еще нет
+  if not assigned(TBConfig) then
     TBConfig:=TXMLConfig.Create(nil);
-    TBConfig.Filename:=filename;
-  end else begin
-    tempTBConfig:=TXMLConfig.Create(nil);
-    tempTBConfig.Filename:=filename;
 
-    tempTBContentNode:=tempTBConfig.FindNode('ToolBarsContent',false);
-    TBContentNode:=TBConfig.FindNode('ToolBarsContent',false);
+  //ищем узел ToolBarsContent, если его нет создаем тестовое значение
+  //я не нашел спомоба проще создать узел ToolBarsContent
+  TBContentNode:=TBConfig.FindNode(CToolBarsContent,false);
+  if TBContentNode=nil then
+    TBConfig.SetValue(CToolBarsContent+'/'+'test','test');//создан ToolBarsContent
 
-    if assigned(tempTBContentNode) and assigned(TBContentNode)then begin
-      TBSubNode:=tempTBContentNode.FirstChild;
-      while assigned(TBSubNode)do
-      begin
+  //читаем загружаемый файл, ищем узел ToolBarsContent
+  tempTBConfig:=TXMLConfig.Create(nil);
+  tempTBConfig.Filename:=AFileName;
+  tempTBContentNode:=tempTBConfig.FindNode(CToolBarsContent,false);
+
+  //если узла ToolBarsContent в TBConfig небыло и мы его создавали
+  //находим его повторно
+  if TBContentNode=nil then
+    TBContentNode:=TBConfig.FindNode(CToolBarsContent,false);
+
+
+  //пробегаем все загружаемые тулбары и копируем их в TBConfig
+  if assigned(tempTBContentNode) and assigned(TBContentNode)then begin
+    TBSubNode:=tempTBContentNode.FirstChild;
+    while assigned(TBSubNode)do
+    begin
+      TBType:=getAttrValue(TBSubNode,'Type','');
+      TBName:=TBSubNode.NodeName;
+      if (@ACheckFunc=nil)or ACheckFunc(fmainform,factionlist,TBSubNode,TBName,TBType) then
         TBContentNode.AppendChild(TBSubNode.CloneNode(true,TBContentNode.OwnerDocument));
 
-        TBSubNode:=TBSubNode.NextSibling;
-      end;
+      TBSubNode:=TBSubNode.NextSibling;
     end;
-
-    tempTBConfig.Free;
   end;
+
+  tempTBConfig.Free;
+  //удаляем тестовую запись
+  TBConfig.DeleteValue(CToolBarsContent+'/'+'test');
 end;
+
 function CompareNodes(CntNode,TmpCntNode:TDomNode):boolean;
 var
   cntAttrNode,TmpcntAttrNode:TDomNode;

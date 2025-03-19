@@ -35,11 +35,11 @@ type
   TPaletteControlBaseType=TWinControl;
   TPaletteCreateFunc=function (aName,aCaption,aType: string;TBNode:TDomNode;var PaletteControl:TPaletteControlBaseType;DoDisableAlign:boolean):TPaletteControlBaseType of object;
   TPaletteItemCreateFunc=procedure (aNode: TDomNode;rootnode:TPersistent;palette:TPaletteControlBaseType;treeprefix:string) of object;
-  TTBCreateFunc=function (fmf:TForm;aName,aType: string):TToolBar of object;
+  TTBCreateFunc=function (fmf:TForm;aName,aCaption,aType: string):TToolBar of object;
   TTBItemCreateFunc=procedure (fmf:TForm;actlist:TActionList;aNode: TDomNode; TB:TToolBar) of object;
   TTBRegisterInAPPFunc=procedure (fmf:TForm;actlist:TActionList;aTBNode: TDomNode;aName,aType: string;Data:Pointer) of object;
 
-  TTBCheckFunc=function(fmf:TForm;actlist:TActionList;aTBNode:TDomNode;aName,aType:string):boolean;
+  TTBCheckFunc=function(fmf:TForm;actlist:TActionList;aTBNode:TDomNode;aName,aCaption,aType:string):boolean;
 
   TPaletteCreateFuncRegister=specialize TDictionary <string,TPaletteCreateFunc>;
   TPaletteItemCreateFuncRegister=specialize TDictionary <string,TPaletteItemCreateFunc>;
@@ -92,13 +92,13 @@ type
     function CreateToolbar(aName:string):TToolBar;
     function CreateToolPalette(aControlName: string;DoDisableAlign:boolean=false):TPaletteControlBaseType;
     procedure AddContentToToolbar(tb:TToolBar;aName:string);
-    function DoTBCreateFunc(aName,aType:string):TToolBar;
+    function DoTBCreateFunc(aName,aCaption,aType:string):TToolBar;
     function DoToolPaletteCreateFunc(aControlName,aInternalName:string;TBNode:TDomNode;var PaletteControl:TPaletteControlBaseType;DoDisableAlign:boolean):TPaletteControlBaseType;
     procedure DoTBItemCreateFunc(fmf:TForm;actlist:TActionList;aNodeName:string; aNode: TDomNode; TB:TToolBar);
     procedure DoToolPaletteItemCreateFunc(aNodeName:string; aNode: TDomNode;rootnode:TPersistent;PC:TPaletteControlBaseType;treeprefix:string);
 
-    procedure SetupDefaultToolBar(aName,atype: string; tb:TToolBar);
-    function CreateDefaultToolBar(aName,atype: string):TToolBar;
+    procedure SetupDefaultToolBar(aName,aCaption,atype: string; tb:TToolBar);
+    function CreateDefaultToolBar(aName,aCaption,atype: string):TToolBar;
     procedure CreateDefaultSeparator(fmf:TForm;actlist:TActionList;aNode: TDomNode; TB:TToolBar);
     procedure CreateDefaultAction(fmf:TForm;actlist:TActionList;aNode: TDomNode; TB:TToolBar);
     procedure FloatDockSiteClose(Sender: TObject; var CloseAction: TCloseAction);
@@ -321,7 +321,7 @@ begin
   result:='ACN_SHOWFORM_'+uppercase(fname);
 end;
 
-procedure TToolBarsManager.SetupDefaultToolBar(aName,atype: string; tb:TToolBar);
+procedure TToolBarsManager.SetupDefaultToolBar(aName,aCaption,atype: string; tb:TToolBar);
 {var
   ta:TAction;}
 begin
@@ -338,19 +338,20 @@ begin
   tb.DragKind:=dkDock;
   tb.DragMode:=dmAutomatic;
   tb.ShowCaptions:=true;
-  tb.Name:=aname;
+  tb.Name:=aName;
+  tb.Caption:=aCaption;
   tb.EdgeBorders:=[];
   if assigned(factionlist)then
   if not assigned(tb.Images) then
                                  tb.Images:=factionlist.Images;
 end;
 
-function TToolBarsManager.CreateDefaultToolBar(aName,atype: string):TToolBar;
+function TToolBarsManager.CreateDefaultToolBar(aName,aCaption,atype: string):TToolBar;
 {var
   ta:TAction;}
 begin
   result:=TToolBar.Create(fmainform);
-  SetupDefaultToolBar(aName,atype,result);
+  SetupDefaultToolBar(aName,aCaption,atype,result);
 end;
 procedure TToolBarsManager.CreateDefaultSeparator(fmf:TForm;actlist:TActionList;aNode: TDomNode; TB:TToolBar);
 begin
@@ -438,14 +439,14 @@ begin
   PaletteItemCreateFuncRegister.add(uppercase(aNodeName),PaletteItemCreateFunc);
 end;
 
-function TToolBarsManager.DoTBCreateFunc(aName,aType:string):TToolBar;
+function TToolBarsManager.DoTBCreateFunc(aName,aCaption,aType:string):TToolBar;
 var
   tbcf:TTBCreateFunc;
 begin
   result:=nil;
   if assigned(TBCreateFuncRegister) then
     if TBCreateFuncRegister.TryGetValue(uppercase(aType),tbcf)then
-      result:=tbcf(fmainform,aName,aType);
+      result:=tbcf(fmainform,aName,aCaption,aType);
 end;
 
 procedure TToolBarsManager.RegisterTBItemCreateFunc(aNodeName:string;TBItemCreateFunc:TTBItemCreateFunc);
@@ -655,7 +656,7 @@ procedure TToolBarsManager.LoadToolBarsContent(AFileName:string;ACheckFunc:TTBCh
 var
   tempTBConfig:TXMLConfig;
   tempTBContentNode,TBContentNode,TBSubNode:TDomNode;
-  TBName,TBType:string;
+  TBName,TBCaption,TBType:string;
 begin
   //создаем TBConfig если его еще нет
   if not assigned(TBConfig) then
@@ -685,7 +686,8 @@ begin
     begin
       TBType:=getAttrValue(TBSubNode,'Type','');
       TBName:=TBSubNode.NodeName;
-      if (@ACheckFunc=nil)or ACheckFunc(fmainform,factionlist,TBSubNode,TBName,TBType) then
+      TBCaption:=getAttrValue(TBSubNode,'Caption',TBName);
+      if (@ACheckFunc=nil)or ACheckFunc(fmainform,factionlist,TBSubNode,TBName,TBCaption,TBType) then
         TBContentNode.AppendChild(TBSubNode.CloneNode(true,TBContentNode.OwnerDocument));
 
       TBSubNode:=TBSubNode.NextSibling;
@@ -878,12 +880,13 @@ end;
 function TToolBarsManager.CreateToolbar(aName:string):TToolBar;
 var
   TBNode{,TBSubNode}:TDomNode;
-  TBType:string;
+  TBType,TBCaption:string;
 begin
   TBNode:=FindBarsContent(aName);
   if TBNode<>nil then begin
     TBType:=getAttrValue(TBNode,'Type','');
-    result:=DoTBCreateFunc(aName,TBType);
+    TBCaption:=getAttrValue(TBNode,'Caption',aName);
+    result:=DoTBCreateFunc(aName,TBCaption,TBType);
     if assigned(result) then begin
       result.FloatingDockSiteClass:=TToolBarsManagerDockForm;
       if assigned(TBNode) then
